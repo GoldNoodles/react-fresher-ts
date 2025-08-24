@@ -2,11 +2,16 @@ import axios from "axios";
 
 const instance = axios.create({
   baseURL: import.meta.env.VITE_BACKEND_URL,
+  withCredentials:true
 });
 
 // Add a request interceptor
 instance.interceptors.request.use(function (config) {
   // Do something before request is sent
+  const token = localStorage.getItem("access_token");
+  const auth = token ? `Bearer ${token}` : '';
+  config.headers['Authorization'] = auth;
+  
   return config;
 }, function (error) {
   // Do something with request error
@@ -17,7 +22,7 @@ instance.interceptors.request.use(function (config) {
 instance.interceptors.response.use(function (response) {
   // Any status code that lie within the range of 2xx cause this function to trigger
   // Do something with response data
-  if (response && response.data ) {
+  if (response && response.data) {
     return response.data;
   }
   return response;
