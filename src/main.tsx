@@ -10,6 +10,7 @@ import AboutPage from './pages/client/about';
 import LoginPage from './pages/client/auth/login';
 import RegisterPage from './pages/client/auth/register';
 import './styles/global.scss'
+import HomePage from './pages/client/home';
 
 const router = createBrowserRouter([
   {
@@ -17,25 +18,29 @@ const router = createBrowserRouter([
     element: <Layout />,
     children: [
       {
+        index: true,
+        element: <HomePage />
+      },
+      {
         path: "/book",
-        element: <BookPage/>,
+        element: <BookPage />,
       },
 
       {
         path: "/about",
-        element: <AboutPage/>,
+        element: <AboutPage />,
       },
     ]
   },
 
   {
     path: "/login",
-    element: <LoginPage/>,
+    element: <LoginPage />,
   },
 
   {
     path: "/register",
-    element: <RegisterPage/>,
+    element: <RegisterPage />,
   },
 
 ]);
