@@ -18,30 +18,30 @@ const LoginPage = () => {
     const { message, notification } = App.useApp();
     const {setIsAuthenticated, setUser} = useCurrentApp();
 
-    const onFinish: FormProps<FieldType>['onFinish'] = async (values) => {
-        const { username, password } = values;
-        setIsSubmit(true);
+        const onFinish: FormProps<FieldType>['onFinish'] = async (values) => {
+            const { username, password } = values;
+            setIsSubmit(true);
 
-        const res = await loginAPI(username, password);
-        setIsSubmit(false);
+            const res = await loginAPI(username, password);
+            setIsSubmit(false);
 
-        if (res?.data) {
-            setIsAuthenticated(true);
-            setUser(res.data.user);
-            //success
-            localStorage.setItem('access_token', res.data.access_token);
-            message.success("Đăng nhập user thành công");
-            navigate("/")
-        } else {
-            //error
-            notification.error({
-                message: "Có lỗi xảy ra",
-                description: res.message && Array.isArray(res.message) ? res.message[0] : res.message,
-                duration: 5
-            })
-        }
-        setIsSubmit(false);
-    };
+            if (res?.data) {
+                setIsAuthenticated(true);
+                setUser(res.data.user);
+                //success
+                localStorage.setItem('access_token', res.data.access_token);
+                message.success("Đăng nhập user thành công");
+                navigate("/")
+            } else {
+                //error
+                notification.error({
+                    message: "Có lỗi xảy ra",
+                    description: res.message && Array.isArray(res.message) ? res.message[0] : res.message,
+                    duration: 5
+                })
+            }
+            setIsSubmit(false);
+        };
 
     return (
         <>

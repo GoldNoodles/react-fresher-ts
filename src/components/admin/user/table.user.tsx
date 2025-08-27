@@ -1,11 +1,13 @@
 import { getUserAPI } from '@/services/api';
 import { dateRangeValidate } from '@/services/helper';
-import { DeleteTwoTone, EditTwoTone, PlusOutlined } from '@ant-design/icons';
+import { CloudUploadOutlined, DeleteTwoTone, EditTwoTone, ExportOutlined, PlusOutlined } from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { ProTable, TableDropdown } from '@ant-design/pro-components';
 import { Button, Space, Tag } from 'antd';
 import { useRef, useState } from 'react';
-import { render } from 'sass';
+import DetailUser from './detail.user';
+import CreateUser from './create.user';
+import ImportUser from './data/import.user';
 
 //hiệu ứng delay khi loading web
 const waitTimePromise = async (time: number = 100) => {
@@ -29,73 +31,7 @@ type TSearch = {
     createdAtRange: string;
 }
 
-const columns: ProColumns<IUserTable>[] = [
-    {
-        dataIndex: 'index',
-        valueType: 'indexBorder',
-        width: 48,
-    },
 
-    {
-        title: 'Id',
-        dataIndex: "_id",
-        hideInSearch: true,
-        ellipsis: true,// Nội dung dài sẽ bị cắt
-
-        render(dom, entity, index, action, schema) {
-            return (
-                <a href='#'>{entity._id}</a>
-            )
-        },
-    },
-
-    {
-        title: 'FullName',
-        dataIndex: "fullName"
-    },
-
-    {
-        title: 'Email',
-        dataIndex: "email",
-        copyable: true,// Cho phép copy
-    },
-
-    {
-        title: 'CreatedAt',
-        dataIndex: "createdAt",
-        valueType: 'date',
-        sorter: true,
-        hideInSearch: true,
-    },
-
-    {
-        title: 'CreatedAt',
-        dataIndex: "createdAtRange",
-        valueType: 'dateRange',
-        hideInTable: true,
-    },
-
-
-    {
-        title: 'Action',
-        hideInSearch: true,
-        render(dom, entity, index, action, schema) {
-            return (
-                <>
-                    <EditTwoTone
-                        twoToneColor="#f57800"
-                        style={{ cursor: "pointer", marginRight: 15 }}
-                    />
-
-                    <DeleteTwoTone
-                        twoToneColor="#ff4d4f"
-                        style={{ cursor: "pointer" }}
-                    />
-                </>
-            )
-        },
-    },
-];
 
 const TableUser = () => {
     const actionRef = useRef<ActionType>();
@@ -105,6 +41,91 @@ const TableUser = () => {
         pages: 0,
         total: 0
     });
+
+    const [openViewDetail, setOpenViewDetail] = useState<boolean>(false);
+    const [dataViewDetail, setDataViewDetail] = useState<IUserTable | null>(null);
+
+    const [openModalCreate, setOpenModalCreate] = useState<boolean>(false);
+    const [openModalImport, setOpenModalImport] = useState<boolean>(false);
+
+    const columns: ProColumns<IUserTable>[] = [
+        {
+            dataIndex: 'index',
+            valueType: 'indexBorder',
+            width: 48,
+        },
+
+        {
+            title: 'Id',
+            dataIndex: "_id",
+            hideInSearch: true,
+            ellipsis: true,// Nội dung dài sẽ bị cắt
+
+            render(dom, entity, index, action, schema) {
+                return (
+                    <a
+                        href='#'
+                        onClick={() => {
+                            setDataViewDetail(entity);
+                            setOpenViewDetail(true);
+                        }}
+                    >{entity._id}</a>
+                )
+            },
+        },
+
+        {
+            title: 'FullName',
+            dataIndex: "fullName"
+        },
+
+        {
+            title: 'Email',
+            dataIndex: "email",
+            copyable: true,// Cho phép copy
+        },
+
+        {
+            title: 'CreatedAt',
+            dataIndex: "createdAt",
+            valueType: 'date',
+            sorter: true,
+            hideInSearch: true,
+        },
+
+        {
+            title: 'CreatedAt',
+            dataIndex: "createdAtRange",
+            valueType: 'dateRange',
+            hideInTable: true,
+        },
+
+
+        {
+            title: 'Action',
+            hideInSearch: true,
+            render(dom, entity, index, action, schema) {
+                return (
+                    <>
+                        <EditTwoTone
+                            twoToneColor="#f57800"
+                            style={{ cursor: "pointer", marginRight: 15 }}
+                        />
+
+                        <DeleteTwoTone
+                            twoToneColor="#ff4d4f"
+                            style={{ cursor: "pointer" }}
+                        />
+                    </>
+                )
+            },
+        },
+    ];
+
+    //funtion reload modal 
+    const refreshTable = () => {
+        actionRef.current?.reload();
+    }
     return (
         <>
             <ProTable<IUserTable, TSearch>
@@ -125,16 +146,18 @@ const TableUser = () => {
                             query += `fullName=/${params.fullName}/i`
                         }
 
-                        const createDateRange = dateRangeValidate (params.createdAtRange);
+                        const createDateRange = dateRangeValidate(params.createdAtRange);
                         if (createDateRange) {
                             query += `&createdAt>=${createDateRange[0]}&createdAt<=${createDateRange[1]}`
                         }
                     }
 
+                    //Tạo mới user xong thì sẽ đưa lên đầu
+                    
                     //sắp xếp theo thứ tự 
-                    if(sort && sort.createdAt){
+                    if (sort && sort.createdAt) {
                         query += `&sort=${sort.createdAt === "ascend" ? "createdAt" : "-createdAt"}`
-                    }
+                    }else query += `&sort=-createAt`;
 
                     const res = await getUserAPI(query);
 
@@ -202,10 +225,25 @@ const TableUser = () => {
                 headerTitle="Table user"
                 toolBarRender={() => [
                     <Button
+                        icon={<ExportOutlined />}
+                        type='primary'
+                    >
+                        Export
+                    </Button>,
+
+                    <Button
+                        icon={<CloudUploadOutlined />}
+                        type='primary'
+                        onClick={() => { setOpenModalImport(true) }}
+                    >
+                        Upload
+                    </Button>,
+
+                    <Button
                         key="button"
                         icon={<PlusOutlined />}
                         onClick={() => {
-                            actionRef.current?.reload();
+                            setOpenModalCreate(true);
                         }}
                         type="primary"
                     >
@@ -213,6 +251,25 @@ const TableUser = () => {
                     </Button>
 
                 ]}
+            />
+
+            <DetailUser
+                openViewDetail={openViewDetail}
+                setOpenViewDetail={setOpenViewDetail}
+                dataViewDetail={dataViewDetail}
+                setDataViewDetail={setDataViewDetail}
+            />
+
+            <CreateUser
+                openModalCreate={openModalCreate}
+                setOpenModalCreate={setOpenModalCreate}
+                refreshTable={refreshTable}
+            />
+
+            <ImportUser
+                openModalImport={openModalImport}
+                setOpenModalImport={setOpenModalImport}
+                refreshTable={refreshTable}
             />
         </>
     );

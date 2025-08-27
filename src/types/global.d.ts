@@ -62,4 +62,10 @@ declare global {
         createdAt: Data;
         updatedAt: Data;
     }
+
+    interface IResponseImport{
+        countSuccess:number;
+        countError:number;
+        detail:any;
+    }
 }
